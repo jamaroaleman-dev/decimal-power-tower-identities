@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Please cite the manuscript when using these algorithms or results."
+title: "Self-Referential Identities Involving Decimal Power Towers and Integer Roots: Algebraic Reductions, Combinatorial Variants, and Certified Computational Searches"
+type: software
+authors:
+  - family-names: "Amaro"
+    given-names: "Josué"
+    affiliation: "Independent Researcher"
+version: "1.0.0"
+abstract: "Exact algebraic reductions and certified computational searches for self-referential decimal power towers and integer roots, including external and embedded root indices."

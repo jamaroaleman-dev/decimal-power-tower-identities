@@ -1,0 +1,150 @@
+{
+  "rule": "n=k a c ...; 2<=k<=9; T(a,c,...)=n**k; individual digits",
+  "zero_to_zero_convention": "undefined",
+  "time_budget_seconds": 600.0,
+  "seconds": 600.008,
+  "finished": true,
+  "total_families": 512,
+  "families_eliminated_by_factors": 324,
+  "stages": [
+    {
+      "q": 4,
+      "digit_bound": "10^4",
+      "stage_seconds": 0.011,
+      "cumulative_seconds": 0.011,
+      "new_candidates": 1141,
+      "cumulative_candidates": 1141,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 12,
+      "digit_bound": "10^12",
+      "stage_seconds": 0.023,
+      "cumulative_seconds": 0.037,
+      "new_candidates": 658,
+      "cumulative_candidates": 1799,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 24,
+      "digit_bound": "10^24",
+      "stage_seconds": 0.059,
+      "cumulative_seconds": 0.099,
+      "new_candidates": 574,
+      "cumulative_candidates": 2373,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 48,
+      "digit_bound": "10^48",
+      "stage_seconds": 0.137,
+      "cumulative_seconds": 0.239,
+      "new_candidates": 487,
+      "cumulative_candidates": 2860,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 96,
+      "digit_bound": "10^96",
+      "stage_seconds": 0.297,
+      "cumulative_seconds": 0.539,
+      "new_candidates": 433,
+      "cumulative_candidates": 3293,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 192,
+      "digit_bound": "10^192",
+      "stage_seconds": 1.494,
+      "cumulative_seconds": 2.035,
+      "new_candidates": 571,
+      "cumulative_candidates": 3864,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 384,
+      "digit_bound": "10^384",
+      "stage_seconds": 6.188,
+      "cumulative_seconds": 8.226,
+      "new_candidates": 525,
+      "cumulative_candidates": 4389,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 768,
+      "digit_bound": "10^768",
+      "stage_seconds": 40.095,
+      "cumulative_seconds": 48.324,
+      "new_candidates": 518,
+      "cumulative_candidates": 4907,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 1536,
+      "digit_bound": "10^1536",
+      "stage_seconds": 229.278,
+      "cumulative_seconds": 277.604,
+      "new_candidates": 422,
+      "cumulative_candidates": 5329,
+      "complete": true,
+      "exhaustive": true,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    },
+    {
+      "q": 3072,
+      "digit_bound": "10^3072",
+      "stage_seconds": 322.397,
+      "cumulative_seconds": 600.005,
+      "new_candidates": 90,
+      "cumulative_candidates": 5419,
+      "complete": false,
+      "exhaustive": false,
+      "cumulative_solutions": 0,
+      "cumulative_pending": 0
+    }
+  ],
+  "counts": {
+    "evaluated": 5419,
+    "prefix_mismatch": 5415,
+    "exponent_mismatch": 3,
+    "undefined_tower": 1,
+    "tower_mismatch": 0,
+    "solutions": 0,
+    "pending": 0
+  },
+  "last_position": {
+    "k": 2,
+    "a": 9,
+    "c": 6,
+    "h": 3125,
+    "exponent_t_digits": 2432
+  },
+  "solutions": [],
+  "pending": [],
+  "note": "Each new stage examines t above the preceding bound; candidates longer than D are also resolved so that no gaps remain between stages."
+}

@@ -1,0 +1,102 @@
+{
+  "rule": "root_k(T(digits(n)))=n; original order; integer k>2; no blocks",
+  "max_digits": 10000,
+  "max_printed_index_digits": 60,
+  "unbounded_index": true,
+  "completed": true,
+  "last_completed_base": 7,
+  "seconds": 29.634,
+  "counts": {
+    "candidate_powers": 93166,
+    "compatible_leading_digit": 17020,
+    "defined_towers": 193,
+    "identities": 2,
+    "numeric_indices": 0,
+    "symbolic_indices": 2
+  },
+  "trivial_families": [
+    "root_k(0)=0 for every integer k>=3",
+    "root_k(1)=1 for every integer k>=3"
+  ],
+  "identities": [
+    {
+      "n": "4294967296",
+      "digits": [
+        "4",
+        "2",
+        "9",
+        "4",
+        "9",
+        "6",
+        "7",
+        "2",
+        "9",
+        "6"
+      ],
+      "tower": "4^(2^(9^(4^(9^(6^(7^(2^(9^(6)))))))))",
+      "primitive_base": 2,
+      "t": 32,
+      "g": 2,
+      "index_coefficient": {
+        "p": 1,
+        "q": 16
+      },
+      "exponent_tower": "2^(9^(4^(9^(6^(7^(2^(9^(6))))))))",
+      "simplified_exponent": "2^(9^(4^(9^(6^(7^(2^(531441)))))))",
+      "integer_index_above_two": true,
+      "verified": true,
+      "symbolic_k": "(1*(2^(9^(4^(9^(6^(7^(2^(531441)))))))))/16",
+      "index_type": "symbolic"
+    },
+    {
+      "n": "3433683820292512484657849089281",
+      "digits": [
+        "3",
+        "4",
+        "3",
+        "3",
+        "6",
+        "8",
+        "3",
+        "8",
+        "2",
+        "0",
+        "2",
+        "9",
+        "2",
+        "5",
+        "1",
+        "2",
+        "4",
+        "8",
+        "4",
+        "6",
+        "5",
+        "7",
+        "8",
+        "4",
+        "9",
+        "0",
+        "8",
+        "9",
+        "2",
+        "8",
+        "1"
+      ],
+      "tower": "3^(4^(3^(3^(6^(8^(3^(8^(2^(0^(2^(9^(2^(5^(1^(2^(4^(8^(4^(6^(5^(7^(8^(4^(9^(0^(8^(9^(2^(8^(1))))))))))))))))))))))))))))))",
+      "primitive_base": 3,
+      "t": 64,
+      "g": 1,
+      "index_coefficient": {
+        "p": 1,
+        "q": 64
+      },
+      "exponent_tower": "4^(3^(3^(6^(8^(3^(8^(2^(0^(2^(9^(2^(5^(1^(2^(4^(8^(4^(6^(5^(7^(8^(4^(9^(0^(8^(9^(2^(8^(1)))))))))))))))))))))))))))))",
+      "simplified_exponent": "4^(3^(3^(6^(8^(6561)))))",
+      "integer_index_above_two": true,
+      "verified": true,
+      "symbolic_k": "(1*(4^(3^(3^(6^(8^(6561)))))))/64",
+      "index_type": "symbolic"
+    }
+  ]
+}

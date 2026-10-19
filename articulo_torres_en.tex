@@ -1,0 +1,1396 @@
+% Self-contained document: compile twice with pdfLaTeX.
+% Author: Josue Amaro, Independent Researcher.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{microtype}
+\usepackage{array,booktabs,longtable}
+\usepackage{ragged2e}
+\usepackage{seqsplit}
+\usepackage{fvextra}
+\usepackage{xurl}
+\usepackage[unicode,hidelinks]{hyperref}
+\hypersetup{pdftitle={Decimal Power Towers and Integer Roots},
+  pdfauthor={Josué Amaro},
+  pdfsubject={Self-referential identities and certified computational searches}}
+\newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+\allowdisplaybreaks
+\DefineVerbatimEnvironment{Codigo}{Verbatim}{breaklines=true,
+  breakanywhere=true,fontsize=\scriptsize,frame=single}
+
+\title{Self-Referential Identities Involving Decimal Power Towers and Integer Roots: Algebraic Reductions, Combinatorial Variants, and Certified Computational Searches}
+\author{Josué Amaro \\ \small Independent Researcher}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+We investigate identities of the form $\sqrt[k]{T(n)}=n$, where $T$ constructs a power tower from the decimal representation of $n$. We systematically distinguish variants involving individual digits, permutations, consecutive blocks, and a root index that is either external or embedded in a prefix of the number itself. The identity $\sqrt{2^{6^{2^{1^{4^4}}}}}=262144$ motivates the problem. Unique factorization reduces nontrivial solutions to powers $n=b^t$ of a primitive base shared with the bottom base of the tower. Admissible indices are derived through divisibility and prime valuations, even when their decimal representations are prohibitively large. Capped evaluation, inversion of exponentiation, and prefixes certified by integer intervals avoid constructing intractable towers. In the strict square-root model, the only solutions found up to $10^{384}$ digits were $0$, $1$, and $262144$. With individual digits, fixed order, and an arbitrary external index $k>2$, the only nontrivial solutions up to 10,000 digits were $2^{32}=4294967296$ and $3^{64}=3433683820292512484657849089281$, with exact symbolic indices exceeding $10^{100}$. The catalogues comprise 69 pairs admitting digit permutations, 136,216 distinct square-root partitions, and 379 identities with a prefixed index. Permutations and blocks yield numerous additional examples, including $26^{42}$ for the square root and $9394^{82}$ with initial index $5$. By contrast, when the index is embedded exclusively in the first digit and blocks are forbidden, a 600-second run exhaustively ruled out all solutions with at most $10^{1536}$ digits and partially explored the bound $10^{3072}$. We present proofs of the reductions, positive results, negative search bounds, independent checks, and limitations of the records. No finite result is interpreted as an unrestricted classification.
+
+\end{abstract}
+\noindent \textbf{Keywords:} power towers; decimal digits; perfect powers; prime valuations; integer roots; combinatorics on words; recreational mathematics; certified search.
+
+\tableofcontents
+\clearpage
+
+\section{Introduction and Formal Problem Statement}
+
+\subsection{The Motivating Example}
+
+This study was motivated and inspired by the Numberphile video \emph{A New Math Meme}, presented by Matt Parker together with Brady Haran~\cite{numberphile-meme}. Its discussion of the identity involving $262144$ prompted the analytical generalizations and computational searches documented here.
+
+The number $262144=2^{18}$ satisfies
+
+\[
+\sqrt{2^{6^{2^{1^{4^4}}}}}=262144.
+\]
+
+The identity uses each digit of the number exactly once, in its original order. All exponentiation is right-associated. Since $1^{4^4}=1$, we obtain
+
+\[
+2^{6^{2^{1^{4^4}}}}=2^{6^{2^1}}=2^{36}=(2^{18})^2.
+\]
+
+This example raises several distinct questions: whether other numbers satisfy the square-root identity; what happens when the index varies; and how the solutions change when permutations, blocks, or an index written within the number itself are permitted. This article documents the investigations developed in the conversation and their computational records. No claim of historical priority is made for the examples, nor is a comprehensive literature review of the problem presumed.
+
+\subsection{The Tower Operator and Its Domain}
+
+For a nonempty sequence of nonnegative integers $(a_0,\ldots,a_r)$, define recursively
+
+\[
+\mathcal T(a_r)=a_r,\qquad
+\mathcal T(a_0,\ldots,a_r)
+=a_0^{\mathcal T(a_1,\ldots,a_r)}.
+\]
+
+If $n$ has the canonical decimal representation $d_0d_1\cdots d_r$, with no leading zeros except for $n=0$, write
+
+\[
+T(n)=\mathcal T(d_0,d_1,\ldots,d_r).
+\]
+
+In particular, $T(123)=1^{2^3}$; it does not mean $12^3$ or $1^{23}$. Exponentiation is not associative: $a^{b^c}$ and $(a^b)^c$ are different expressions.
+
+Our primary convention is that $0^0$ is \textbf{undefined}. A tower containing any undefined subexpression is rejected, even if a lower base is $0$ or $1$. Auxiliary functions may use $\mathcal T(\varnothing)=1$ as an empty exponent: this evaluates the last entry as $a^1=a$ without introducing additional digits.
+
+For a defined tower and an integer $k\geq1$, the principal nonnegative root satisfies
+
+\[
+\sqrt[k]{\mathcal T}=n
+\quad\Longleftrightarrow\quad
+\mathcal T=n^k.
+\]
+
+The second equation is used for exact verification.
+
+\subsection{Variants That Must Be Distinguished}
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}@{}}
+\toprule
+Model & Tower construction & Role of the index \\
+\midrule
+\endfirsthead
+\toprule
+Model & Tower construction & Role of the index \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Strict digit model & All individual digits, in order & External; fixed or variable \\
+Permuted digits & A permutation of the digit multiset & External \\
+Consecutive blocks & A partition of the decimal string into blocks & External \\
+Index in a prefix & The prefix represents $k$; the remainder is partitioned into blocks & Consumed outside the tower \\
+Index in the first digit & The first digit is $k\in\{2,\ldots,9\}$; the remainder consists of individual digits & Consumed outside the tower \\
+Friedman expressions & Digits with additional operations & A different problem from pure towers \\
+\end{longtable}
+\endgroup
+
+
+Block models preserve order and use every digit exactly once. By default, blocks are canonical decimal strings: the block $0$ is valid, but $048$ is not. A separate exploration allowed leading zeros while retaining the original text of each block. In the prefixed-index model, no digit or block belonging to the index is reused in the radicand.
+
+For a variable external index and blocks, the one-block partition was excluded: with $k=1$, it would make the identity tautological for every integer. Cases with multiple blocks and index $1$ were nevertheless investigated. These are degenerate with respect to the root operation but remain combinatorially informative.
+
+\section{Methodology and Algebraic Reduction}
+
+\subsection{Primitive Bases and Reduction to Powers}
+
+A \textbf{primitive} integer is a number $b\geq2$ that is not a perfect power with exponent greater than one. This notion is distinct from that of a primitive root modulo an integer.
+
+\textbf{Proposition 1.} If $A,n>1$ and $A^E=n^k$, where $E,k$ are positive integers, then there exist a common primitive base $b$ and positive integers $g,t$ such that
+
+\[
+A=b^g,\qquad n=b^t,\qquad gE=kt.
+\]
+
+\textbf{Proof.} Write $A=b^g$, where $b=\prod_i p_i^{\alpha_i}$ and $\gcd_i\alpha_i=1$. The equality forces $n$ to have exactly the same prime factors, with valuations $\alpha_i gE/k$. All these valuations are integers. By Bézout's identity applied to the $\alpha_i$, the number $gE/k$ is also an integer; denoting it by $t$ gives $n=b^t$. Equality of the exponents yields $gE=kt$. $\square$
+
+When the bottom base is a single digit, the possibilities are
+
+\[
+\begin{array}{c|rrrrrrrr}
+A&2&3&4&5&6&7&8&9\\\hline
+b&2&3&2&5&6&7&2&3\\
+g&1&1&2&1&1&1&3&2
+\end{array}
+\]
+
+Thus the only primitive bases required are $2,3,5,6,7$. The problem is not restricted to prime powers: the composite base $6$ is also necessary.
+
+When $A$ is a proper prefix of $n$, we have $A<n$, hence $g<t$ and $t\geq2$. In block models, the primitive base may be arbitrarily large; bounding it in a program restricts the family examined, rather than merely the implementation.
+
+\subsection{Deriving the Index Without Enumerating Its Values}
+
+For a specified tower with first base $A=b^g$ and tail value $E$, the preceding proposition gives
+
+\[
+k=\frac{gE}{t}.
+\]
+
+Let $u=\gcd(g,t)$ and write $p=g/u$, $q=t/u$. Then
+
+\[
+k=\frac{pE}{q},\qquad \gcd(p,q)=1.
+\]
+
+Consequently,
+
+\[
+k\in\mathbb Z_{>0}
+\quad\Longleftrightarrow\quad E>0\ \text{and}\ q\mid E.
+\]
+
+To require $k>2$, impose the additional condition $pE>2q$. A search can therefore cover \textbf{all indices}, including enormous ones, without imposing an artificial upper bound on $k$. For a given $n>1$ and a fixed tower, the admissible index, if it exists, is unique. Different partitions or permutations may yield different indices for the same number.
+
+\subsection{Divisibility Through Prime Valuations}
+
+If $E=c^H$ with $c\geq2$ and $H\geq0$, and $q=\prod_\ell\ell^{\beta_\ell}$, then
+
+\[
+q\mid E
+\quad\Longleftrightarrow\quad
+v_\ell(c)H\geq\beta_\ell
+\quad\text{for every prime }\ell\mid q.
+\]
+
+A prime dividing $q$ but not $c$ immediately eliminates the candidate. Otherwise, it suffices to check
+
+\[
+H\geq
+\max_{\ell\mid q}
+\left\lceil\frac{\beta_\ell}{v_\ell(c)}\right\rceil.
+\]
+
+The tower $H$ is compared with a small threshold by capped evaluation. Bases $0$ and $1$, as well as towers of value $0$, are handled separately. The preceding formula is not applied to an undefined tower.
+
+\subsection{Exact Capped Evaluation}
+
+For $L\geq1$, the exact value of a tower is computed up to $L$, and $L+1$ is used as an overflow marker. Evaluation proceeds from right to left:
+
+\begin{enumerate}
+\item A base $0$ yields $0$ if the exponent is positive; if the exponent is $0$, the tower is undefined.
+\item A base $1$ with a defined exponent yields $1$.
+\item A positive base raised to $0$ yields $1$.
+\item For $a\geq2$, let $\lambda(a,L)$ be the least integer such that $a^{\lambda(a,L)}>L$. If the exponent reaches this threshold, store $L+1$; otherwise, compute the exact power.
+\end{enumerate}
+
+The procedure continues through the tower after an overflow. This is necessary because a lower base $0$ or $1$ may reduce the value. The undefined marker is always propagated. By induction, the distinction among $0$, $1$, values up to $L$, and values exceeding $L$ is preserved exactly.
+
+\textbf{Zero lemma.} Under the strict convention, a tower of individual digits is defined if and only if its string contains no \texttt{00}.
+
+\textbf{Proof.} Given two consecutive zeros, the subtower beginning at the second is either undefined or equal to $0$, making the power at the first undefined. In the absence of consecutive zeros, every $0$ either has a positive digit immediately to its right or is terminal. If the tower to the right is defined and begins with a positive base, its value is positive. Induction from the rightmost end therefore excludes $0^0$. $\square$
+
+This criterion does not apply to digits \textbf{inside a block}: the block $100$ is a valid positive base.
+
+\subsection{Inverting Exponentiation and Dynamic Programming}
+
+To construct a tail with prescribed value $M>0$, a next block $c\geq2$ requires $M=c^H$. This is decided by repeatedly dividing $M$ by $c$: if the final remainder is $1$, the number of divisions determines $H$; otherwise, that cut is impossible.
+
+The solver continues on the remaining digits with target $H$. States are memoized by position, target, and block restrictions. Targets $0$ and $1$ require separate states for defined or positive towers. This approach avoids indiscriminately enumerating the $2^{L-1}$ partitions of a string of length $L$, although it cannot eliminate all combinatorial growth when very large numbers of solutions must be listed.
+
+For permutations, the state includes the multiset of digits still available. One witnessing order is retained per pair $(n,k)$, rather than all equivalent permutations.
+
+\subsection{Certified Prefixes and Modular Filters}
+
+Astronomical digit bounds are investigated without explicitly constructing $b^t$. Binary exponentiation maintains intervals of the form
+
+\[
+b^t\in[L\,10^s,U\,10^s].
+\]
+
+When mantissas are truncated, the lower bound is rounded downward and the upper bound upward. A decimal prefix and a length are accepted only when both endpoints agree on them; precision is increased whenever ambiguity remains. Thus no decisions depend on floating-point logarithms.
+
+Trailing digits are computed as $b^t\bmod10^w$. The widths depended on the search program: 100, 1,000, and 10,000 digits in the extended square-root exploration; 128, 1,024, and 8,192 in the initial-index search. For a power longer than $w$ digits, the occurrence of \texttt{00} in this suffix certifies undefinedness in the individual-digit model.
+
+Divisibility was also checked independently by modular exponentiation. For a defined tower and a modulus $m$, Euler reduction was used with an exponent correction in the noncoprime case: if $E\geq\varphi(m)$,
+
+\[
+a^E\equiv a^{\varphi(m)+(E\bmod\varphi(m))}\pmod m.
+\]
+
+Capped evaluation determines when this correction applies. The congruences certify the required divisibility; the full equality follows together with the algebraic relations in Proposition 1, rather than from an isolated congruence.
+
+\subsection{Structural Enumeration for Digits and a Fixed Index}
+
+In the external-index case, if the first digits are $a,c,\ldots$, with $a=b^g$, write $E=c^h$ and
+
+\[
+t=\frac{g c^h}{k}.
+\]
+
+For numbers with at most $D$ digits,
+
+\[
+2^t\leq b^t=n<10^D
+\quad\Longrightarrow\quad
+t<D\log_2(10)<4D.
+\]
+
+The same reduction applies to a one-digit initial index when the representation is $n=kac\cdots$. In that case, the required prefix of $b^t$ is $kac$, whereas for an external index it is $ac$.
+
+In the embedded-index model, a one-digit number leaves no tower; a two-digit number leaves a radicand of at most $9$, which cannot equal $n^k$. Any solution must therefore have at least three digits and $a,c\in\{2,\ldots,9\}$. If there is no fourth digit, set $h=1$. Every solution satisfies $t>g$ and $h\geq1$.
+
+\subsection{Additional Pruning Through the Representability of $h$}
+
+Let $S(H)$ be the set of values of finite digit towers not exceeding $H$, including $0$ and $1$ where applicable. For $H\geq2$,
+
+\[
+S(H)=\{0,1\}\cup
+\left\{d^e:\ 2\leq d\leq9,\ e\in S(\lfloor\log_2H\rfloor),\ d^e\leq H\right\}.
+\]
+
+The base cases are $S(0)=\{0\}$ and $S(1)=\{0,1\}$. The formula is exhaustive: a tower of value greater than $1$ begins with a digit between $2$ and $9$, and its exponent is at most $\lfloor\log_2H\rfloor$. Conversely, every generated value has a valid representation. The integer logarithm is obtained from the binary length, without approximation.
+
+Consequently, it is unnecessary to test every integer $h$. For $D=10^{384}$, only 28 representable values below a sufficient bound of 1,280 were needed; for $D=10^{1536}$, 33 values below a bound of 5,107 sufficed.
+
+Likewise, $k\mid gc^h$ is equivalent to requiring that $k/\gcd(k,g)$ divide $c^h$. This condition either discards an entire family or sets a minimum $h$. In the final run, it eliminated 324 of the 512 initial triples $(k,a,c)$.
+
+\section{Results}
+
+\subsection{Results for Individual Digits and an External Index}
+
+\subsubsection{Square Roots in Strict Digit Order}
+
+An initial exhaustive search up to 1,000 digits yielded exactly
+
+\[
+\{n:T(n)=n^2,\ 0\leq n<10^{1000}\}=\{0,1,262144\}.
+\]
+
+Repeating the search under the alternative convention $0^0=1$ produced the same set \textbf{within that bound}. The subsequent astronomical exploration retained the strict convention.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}@{}}
+\toprule
+Digit bound $D$ & Cumulative time, s & Cumulative structural candidates \\
+\midrule
+\endfirsthead
+\toprule
+Digit bound $D$ & Cumulative time, s & Cumulative structural candidates \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+$10^3$ & 0,006 & 242 \\
+$10^4$ & 0,013 & 317 \\
+$10^5$ & 0,020 & 384 \\
+$10^6$ & 0,027 & 448 \\
+$10^9$ & 0,043 & 662 \\
+$10^{12}$ & 0,064 & 876 \\
+$10^{24}$ & 0,177 & 1.727 \\
+$10^{48}$ & 0,718 & 3.416 \\
+$10^{96}$ & 3,620 & 6.799 \\
+$10^{192}$ & 24,639 & 13.566 \\
+$10^{384}$ & 231,585 & 27.115 \\
+\end{longtable}
+\endgroup
+
+
+All these stages were completed with no unresolved candidates and no new solutions. The stage $D=10^{768}$ remained partial when the 300-second budget was exhausted. In total, 28,168 candidates were resolved: 27,923 failed the prefix test, 193 failed exponent compatibility, 51 were undefined, and one yielded $262144$. The cases $0$ and $1$ were included directly.
+
+Thus, under these rules and the strict convention, the preceding set remains exactly $\{0,1,262144\}$ for $0\leq n<10^{10^{384}}$. Exhaustiveness without a digit bound has not been proved.
+
+\subsubsection{Arbitrary External Indices $k>2$: First Solution}
+
+Let
+
+\[
+n_1=4294967296=2^{32}=4^{16},\qquad
+H=T(94967296).
+\]
+
+The full digit sequence of $n_1$ gives
+
+\[
+T(n_1)=4^{2^H}.
+\]
+
+Define the exact integer
+
+\[
+K_1=\frac{2^H}{16}=2^{H-4}.
+\]
+
+Since every digit in $H$ is positive and greater than one, $H\geq9^4=6561$. Hence $K_1$ is an integer and $K_1>10^{100}$. Finally,
+
+\[
+n_1^{K_1}=(4^{16})^{2^H/16}=4^{2^H}=T(n_1),
+\]
+
+whence
+
+\[
+\boxed{\sqrt[K_1]{T(4294967296)}=4294967296.}
+\]
+
+A simplified expression for $H$ is
+
+\[
+H=9^{4^{9^{6^{7^{2^{531441}}}}}},\qquad 531441=9^6.
+\]
+
+The number $531441$ appears only after simplifying the final two digits; it is not a block used in the original construction.
+
+\subsubsection{Second Strict Solution}
+
+Let
+
+\[
+n_2=3433683820292512484657849089281=3^{64}
+\]
+
+and define
+
+\[
+J=T(33683820292512484657849089281).
+\]
+
+The representation of $n_2$ begins with the digits $3,4$; therefore,
+
+\[
+T(n_2)=3^{4^J}.
+\]
+
+Its string contains no \texttt{00}, so the tower is defined. Exact reduction of the zeros and ones in the tail gives
+
+\[
+J=3^{3^{6^{8^{6561}}}}.
+\]
+
+The resulting index is
+
+\[
+K_2=\frac{4^J}{64}=2^{2J-6}.
+\]
+
+In particular, $J\geq3^9=19683$, so $K_2$ is an integer exceeding $10^{100}$. We have
+
+\[
+n_2^{K_2}=(3^{64})^{4^J/64}=3^{4^J}=T(n_2),
+\]
+
+and consequently,
+
+\[
+\boxed{\sqrt[K_2]{T(3433683820292512484657849089281)}
+=3433683820292512484657849089281.}
+\]
+
+Both indices are powers of $2$. Their symbolic definitions are exact, not numerical approximations.
+
+\subsubsection{Scope of the Classification for $k>2$}
+
+The complete search up to 10,000 digits, with no upper bound on $k$, examined 93,166 candidate powers. There were 17,020 compatible leading digits and 193 defined towers among them. The run finished in 29.634 seconds and found exactly the two numbers above, in addition to the trivial families $0$ and $1$.
+
+This implies that, for $0\leq n<10^{10000}$, there is no nontrivial solution with
+
+\[
+3\leq k\leq10^{100}.
+\]
+
+In particular, there are no nontrivial cube-root, fourth-root, or fifth-root solutions within that bound and under strict order. An initial exploration had confirmed the same negative result for each $k=3,\ldots,10$ up to 1,000 digits; an additional cross-check for $k=3,\ldots,12$ up to 12 digits also agreed.
+
+\subsubsection{Base Cases}
+
+For every integer $k\geq1$,
+
+\[
+\sqrt[k]{T(0)}=0,\qquad \sqrt[k]{T(1)}=1.
+\]
+
+With external index $k=1$, every one-digit number is a fixed point; the search up to 1,000 digits found no other strict fixed points. The numbers $0$ and $1$ are \textbf{not} solutions in the embedded-index model: they cannot supply both an admissible index and a remaining tower.
+
+\subsection{Results with Permutations}
+
+All permutations of the digit multiset were allowed, retaining each digit exactly once and right-associative exponentiation. The search was completed for $n<10^{18}$ and $1\leq k\leq12$.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}@{}}
+\toprule
+$k$ & Pairs $(n,k)$ with $n>1$ and a witnessing order \\
+\midrule
+\endfirsthead
+\toprule
+$k$ & Pairs $(n,k)$ with $n>1$ and a witnessing order \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+1 & 28 \\
+2 & 9 \\
+3 & 6 \\
+4 & 5 \\
+5 & 1 \\
+6 & 2 \\
+7 & 1 \\
+8 & 6 \\
+9 & 7 \\
+10 & 0 \\
+11 & 0 \\
+12 & 4 \\
+\textbf{Total} & \textbf{69} \\
+\end{longtable}
+\endgroup
+
+
+Eight of the 28 rows with $k=1$ are the one-digit numbers $2,\ldots,9$; these should not be presented as nontrivial multidigit examples. Appendix A contains all 69 rows, each with a witnessing order. The numbers $0$ and $1$, valid for every external index, are not counted.
+
+Representative examples include:
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}@{}}
+\toprule
+$n$ & $k$ & Witnessing order $s$ & Simplified value of $\mathcal T(s)$ \\
+\midrule
+\endfirsthead
+\toprule
+$n$ & $k$ & Witnessing order $s$ & Simplified value of $\mathcal T(s)$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+64 & 2 & 46 & $4^6$ \\
+\seqsplit{152587890625} & 2 & \seqsplit{525102567889} & $5^{32}$ \\
+\seqsplit{2821109907456} & 2 & \seqsplit{6251010247899} & $6^{32}$ \\
+40353607 & 3 & 73340506 & $7^{27}$ \\
+134217728 & 3 & 234112778 & $2^{81}$ \\
+262144 & 4 & 462124 & $4^{36}$ \\
+15625 & 6 & 56215 & $5^{36}$ \\
+78125 & 7 & 57218 & $5^{49}$ \\
+390625 & 8 & 526309 & $5^{64}$ \\
+625 & 9 & 562 & $5^{36}$ \\
+\end{longtable}
+\endgroup
+
+
+For example, $64^2=4^6$, $15625^6=(5^6)^6=5^{36}$, and $625^9=(5^4)^9=5^{36}$. Permuted fixed points were also obtained, such as $4096=\mathcal T(4,6,9,0)$ and $15625=\mathcal T(5,6,1,2,5)$.
+
+In every case, simplification preserves the identity of the original radicand. In the second example in the table, the $1$ in the witnessing order reduces the upper subtower to $1$, giving $5^{2^{5^1}}=5^{32}$; the subsequent digits still occur in a defined subexpression.
+
+These results do not contradict the strict classification: for example, $64$ requires reversing its digits to use $4^6$, and $262144$ admits different indices when the tower order changes.
+
+\subsection{Results with Blocks and an External Index}
+
+\subsubsection{Elementary Examples and Derivation of Their Indices}
+
+Cuts are indicated by vertical bars; these do not denote division. For a two-block tower $A,E$, the index is obtained from $k=gE/t$.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}@{}}
+\toprule
+$n$ & Form $b^t$ & Blocks & Derivation of $k$ \\
+\midrule
+\endfirsthead
+\toprule
+$n$ & Form $b^t$ & Blocks & Derivation of $k$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+256 & $2^8$ & $2\mid56$ & $56/8=7$ \\
+32768 & $2^{15}$ & $32\mid768$ & $5\cdot768/15=256$ \\
+4194304 & $2^{22}$ & $4\mid194304$ & $2\cdot194304/22=17664$ \\
+8388608 & $2^{23}$ & $8\mid388608$ & $3\cdot388608/23=50688$ \\
+1475789056 & $14^8$ & $14\mid75789056$ & $75789056/8=9473632$ \\
+4096000000 & $40^6$ & $40\mid96000000$ & $96000000/6=16000000$ \\
+\end{longtable}
+\endgroup
+
+
+The independent reference search over all $n<10000$, with canonical blocks and a variable positive index, found the sole nontrivial identity
+
+\[
+256=\sqrt[7]{2^{56}}.
+\]
+
+\subsubsection{Digit-Absorbing Tails}
+
+For $C,D>0$,
+
+\[
+\mathcal T(A,R,C,0,D)
+=A^{R^{C^{0^D}}}=A^R.
+\]
+
+This mechanism uses every digit of a long number without altering a controlled lower exponent. No digit is removed from the original expression.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}@{}}
+\toprule
+$n$ & Blocks & $k$ \\
+\midrule
+\endfirsthead
+\toprule
+$n$ & Blocks & $k$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+$2305843009213693952=2^{61}$ & $2\mid305\mid8430\mid0\mid9213693952$ & $305/61=5$ \\
+$421727973615090139343954369066297=4217^9$ & $4217\mid27\mid973615\mid0\mid90139343954369066297$ & $27/9=3$ \\
+$251196784355150379625705281=25119^6$ & $25119\mid6\mid78435515\mid0\mid379625705281$ & $6/6=1$ \\
+\end{longtable}
+\endgroup
+
+
+The last case is a fixed point with multiple blocks and index $1$.
+
+\subsubsection{An Explicit 1,668-Digit Index}
+
+For $n=262144=2^{18}$, the partition $2\mid6\mid2144$ may be used. Its index is
+
+\[
+k=\frac{6^{2144}}{18}=2^{2143}3^{2142}.
+\]
+
+This integer has 1,668 digits and satisfies
+
+\[
+\sqrt[2^{2143}3^{2142}]{2^{6^{2144}}}=262144.
+\]
+
+Multiplication and division in the formula for $k$ belong to its derivation; they are not additional operations in the radicand.
+
+\subsubsection{Search Runs and Bounds}
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}@{}}
+\toprule
+Maximum primitive base & Maximum digits & Maximum blocks & Partitions examined & Identities per partition & Status \\
+\midrule
+\endfirsthead
+\toprule
+Maximum primitive base & Maximum digits & Maximum blocks & Partitions examined & Identities per partition & Status \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+1.000 & 12 & 12 & 3.847 & 280 & Complete \\
+1.000 & 12 & 12 & 6.698 & 287 & Complete, allowing leading zeros in blocks \\
+10.000 & 24 & 7 & 222.594 & 20.277 & Complete \\
+100.000 & 36 & 5 & 148.239 & 16.690 & Complete \\
+100.000 & 36 & 8 & 11.674.217 & 506.113 & Partial; bases through 63 completed \\
+100.000 & 36 & 8 & 13.837.059 & 872.450 & Partial; bases through 630 completed \\
+\end{longtable}
+\endgroup
+
+
+The last two runs used the modular and valuation filters, respectively. Their durations were approximately 90 and 60 seconds. The runs overlap: their counters must not be added as though they counted distinct solutions. The final five-block repeat completed its region in 3.815 seconds.
+
+Complete regions are conditioned \textbf{simultaneously} on the primitive base, the digit count, the number of blocks, and the convention on leading zeros. They do not classify all integers with 36 digits.
+
+Appendix B retains the 112 distinct witnesses present in the historical samples, corresponding to 49 numbers, with all their blocks and exact or symbolic indices. The original records for this variant retained complete counters but capped the lists of examples. Consequently, no claim is made to possess the hundreds of thousands of individual witnesses counted in the partial runs.
+
+\subsection{Square Roots Only, with Blocks}
+
+\subsubsection{Numbers Found}
+
+The distinct numbers found were
+
+\[
+0,\quad1,\quad262144,\quad
+N=268460636031393932323010374318061912785738337881638804914176=26^{42}.
+\]
+
+For $262144$, the following partitions were retained:
+
+\[
+2\mid6\mid2\mid1\mid4\mid4,
+\qquad
+2\mid6\mid2\mid1\mid44.
+\]
+
+Both yield $2^{36}$ and therefore index $k=2$.
+
+\subsubsection{The Six New Partitions with at Most Five Blocks}
+
+For $N=26^{42}$, the six solutions with at most five blocks have the form
+
+\[
+26\mid84\mid C\mid0\mid D.
+\]
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}@{}}
+\toprule
+$C$ & $D$ \\
+\midrule
+\endfirsthead
+\toprule
+$C$ & $D$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+6 & \seqsplit{636031393932323010374318061912785738337881638804914176} \\
+60636 & \seqsplit{31393932323010374318061912785738337881638804914176} \\
+\seqsplit{60636031393932323} & \seqsplit{10374318061912785738337881638804914176} \\
+\seqsplit{6063603139393232301} & \seqsplit{374318061912785738337881638804914176} \\
+\seqsplit{60636031393932323010374318} & \seqsplit{61912785738337881638804914176} \\
+\seqsplit{606360313939323230103743180619127857383378816388} & 4914176 \\
+\end{longtable}
+\endgroup
+
+
+Each concatenation reproduces the 60 digits of $N$. Since $C,D>0$,
+
+\[
+\mathcal T(26,84,C,0,D)=26^{84}=(26^{42})^2=N^2.
+\]
+
+\subsubsection{Coverage and Multiplicity}
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}P{\dimexpr(\textwidth-10\tabcolsep)/6\relax}@{}}
+\toprule
+Maximum primitive base & Digits & Blocks & Candidate powers & Time, s & Result \\
+\midrule
+\endfirsthead
+\toprule
+Maximum primitive base & Digits & Blocks & Candidate powers & Time, s & Result \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+100.000 & 36 & No additional limit & 647.785 & 0,565 & Complete: $0,1,262144$ \\
+1.000.000 & 120 & Up to 5 & 20.256.439 & 17,009 & Complete: also $26^{42}$ \\
+100.000 & 100 & No additional limit & Partial run & 60,299 & Enumeration interrupted at base 26 \\
+\end{longtable}
+\endgroup
+
+
+The last run stored 136,210 identities. Combining the three files and removing duplicates left \textbf{136,216 partitions}: one for $0$, one for $1$, two for $262144$, and 136,212 for $26^{42}$. All were reverified during preparation of this article.
+
+This multiplicity does not imply 136,216 distinct numbers or a complete enumeration of all possible partitions of $N$. The final search was partial.
+
+\subsection{An Index Embedded as a Prefix, with Blocks in the Remainder}
+
+\subsubsection{A Solution with Index $5$}
+
+Let
+
+\[
+N_5=9394^{82}.
+\]
+
+It has 326 digits and admits the decimal partition
+
+\[
+5\mid9394\mid410\mid94212791\mid0\mid D,
+\]
+
+where $D$ is the positive block consisting of the remaining 309 digits. The initial $5$ serves exclusively as the index. We obtain
+
+\[
+\mathcal T(9394,410,94212791,0,D)
+=9394^{410}=(9394^{82})^5.
+\]
+
+Thus,
+
+\[
+\boxed{\sqrt[5]{9394^{410^{94212791^{0^D}}}}=N_5.}
+\]
+
+The definition $N_5=9394^{82}$ and the displayed prefix uniquely determine $D$; its complete digits are retained in the data file. There are \textbf{27 partitions} with at most five tower blocks for this pair $(N_5,5)$, not 27 distinct numbers.
+
+\subsubsection{A Degenerate Case with Index $1$}
+
+The number $N_1=2^{13365}$ has 4,024 digits and begins with
+
+\[
+1\mid8\mid4455\mid686786\mid0\mid D_1.
+\]
+
+The block $D_1$ has 4,011 digits and is positive. The tower in the radicand equals
+
+\[
+8^{4455}=2^{3\cdot4455}=2^{13365}=N_1.
+\]
+
+A total of \textbf{352 variants} with at most five blocks were retained for index $1$. This is a fixed point, admissible only when $k=1$ is permitted; it is not a solution of the subsequent model with $k\geq2$.
+
+The two cases in this section comprise 379 stored identities, reverified for this article. All variants with at most five blocks can be described by cutting the tail after the prefix $k\mid A\mid E$ as $C\mid0\mid D$, with positive canonical blocks $C,D$; the verification programs also established the uniqueness of the admissible first blocks for these two numbers and indices.
+
+\subsubsection{Positive and Negative Search Results}
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}@{}}
+\toprule
+Restrictions & Scope & Status and result \\
+\midrule
+\endfirsthead
+\toprule
+Restrictions & Scope & Status and result \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+$b\leq100000$, up to 100 digits, up to 5 tower blocks, any proper prefix as index & 2.062.901 powers; 5,841 s & Complete, no solutions \\
+$b\leq10000$, up to 330 digits, up to 5 blocks & 917.321 powers; 148.878 integer targets; 20,328 s & Complete, the 27 partitions of $(9394^{82},5)$ \\
+$b\leq10000$, up to 1.000 digits, up to 6 blocks & 60 s, still processing base 2 & Partial, no solutions in the portion visited \\
+Certified prefixes; $b\in\{2,3,5,6,7\}$; $t\leq10^6$ & 5.000.000 points; 12,523 s & Complete for this subfamily; case $k=1$ \\
+Prefix subfamily with $k\geq2$, an index of up to 3 digits, a first block up to 999999, and exponents up to 1.000 & 42.857.999 points; 90,001 s; last completed base 43103 & Partial; case $k=5$ \\
+Reproduction of the subfamily with $b\leq10000$, $t\leq100$ & 2,167 s & Complete for this subfamily; recovers $k=5$ \\
+\end{longtable}
+\endgroup
+
+
+The prefix explorations examine numbers beginning with $k\mid b^g\mid E$, where $E=kt/g$, followed by a tail whose tower equals $1$. They are not equivalent to enumerating every partition. The absence of other cases in these explorations does not establish global uniqueness of $k=5$.
+
+\subsection{An Index Embedded Exclusively in the First Digit, Without Blocks}
+
+\subsubsection{Previous Negative Result}
+
+This variant requires
+
+\[
+n=\overline{kac\cdots},\qquad
+\mathcal T(a,c,\ldots)=n^k,\qquad 2\leq k\leq9.
+\]
+
+Previous searches found no solutions:
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}@{}}
+\toprule
+Digit bound & Tuples examined & Time, s & Status \\
+\midrule
+\endfirsthead
+\toprule
+Digit bound & Tuples examined & Time, s & Status \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+10.000 & 1.439 & 0,027 & Complete, no unresolved candidates \\
+$10^{96}$ & 30.084 & 16,979 & Complete, no unresolved candidates \\
+\end{longtable}
+\endgroup
+
+
+In the second run, 66 tuples exceeded the actual digit bound, 29,986 failed the prefix test, 29 failed exponent compatibility, and three were undefined.
+
+\subsubsection{Extension with a 600-Second Budget}
+
+The new run incorporated pruning by representability of $h$ and algebraic elimination of families. New intervals of $t$ were processed between stages. Candidates exceeding length $D$ but lying within the sufficient bound $t\leq4D$ were also resolved, thereby avoiding gaps when the range was extended.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}@{}}
+\toprule
+Digit bound for $n$ & Cumulative time, s & Cumulative candidates & Coverage \\
+\midrule
+\endfirsthead
+\toprule
+Digit bound for $n$ & Cumulative time, s & Cumulative candidates & Coverage \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+$10^4$ & 0,011 & 1.141 & Complete \\
+$10^{12}$ & 0,037 & 1.799 & Complete \\
+$10^{24}$ & 0,099 & 2.373 & Complete \\
+$10^{48}$ & 0,239 & 2.860 & Complete \\
+$10^{96}$ & 0,539 & 3.293 & Complete \\
+$10^{192}$ & 2,035 & 3.864 & Complete \\
+$10^{384}$ & 8,226 & 4.389 & Complete \\
+$10^{768}$ & 48,324 & 4.907 & Complete \\
+$10^{1536}$ & 277,604 & 5.329 & Complete \\
+$10^{3072}$ & 600,005 & 5.419 & Partial \\
+\end{longtable}
+\endgroup
+
+
+The record was finalized after 600.008 seconds. The 5,419 resolved candidates comprised 5,415 prefix rejections, three exponent rejections, and one undefined tower. There were no solutions and no surviving candidates left unresolved because of memory limits. The partial stage resolved 90 additional candidates but does not certify its entire bound.
+
+The computational result is therefore the absence of solutions under these rules for
+
+\[
+0<n<10^{10^{1536}}.
+\]
+
+The formatting restrictions themselves exclude representations that do not begin with an admissible index. The conclusion does not extend to all integers without a bound.
+
+\subsubsection{An Illustrative Example That Is Not a Solution}
+
+The number $79631$, mentioned to illustrate the format, does not satisfy
+
+\[
+\sqrt[7]{9^{6^{3^1}}}=79631.
+\]
+
+Indeed, the radicand is $9^{216}$, and an integer seventh root of a power of $9$ would have to be a power of $3$. However,
+
+\[
+3^{10}=59049<79631<177147=3^{11}.
+\]
+
+Similarly, the solutions $4294967296$ and $3433683820292512484657849089281$ in Section 3.1 do not automatically satisfy this model: there the index was external, and the first digit remained inside the tower.
+
+\subsection{Additional Operations: Connections with Friedman Numbers}
+
+The exploration also relaxed the restriction to pure towers by allowing arithmetic operations and parentheses. The standard definition of a Friedman number permits addition, subtraction, multiplication, division, exponentiation, and concatenation in a nontrivial expression formed from its own digits. This definition and several classical examples are documented by \href{https://erich-friedman.github.io/mathmagic/0800.html}{Erich Friedman, \emph{Problem of the Month}, August 2000}. Roots are not included in that standard list of operators.
+
+The following ten identities were verified without requiring concatenation:
+
+\[
+\begin{aligned}
+125&=5^{1+2},&128&=2^{8-1},\\
+216&=6^{2+1},&343&=(3+4)^3,\\
+625&=5^{6-2},&2187&=(2+1^8)^7,\\
+2592&=2^5\cdot9^2,&3125&=(3+1\cdot2)^5,\\
+4096&=(4+0\cdot9)^6,&262144&=2^{6+2\cdot1\cdot4+4}.
+\end{aligned}
+\]
+
+The final five even preserve the original digit order. They are not additional solutions of the strict tower model: they belong to a different class of expressions.
+
+Allowing concatenation gives the elementary infinite family
+
+\[
+n_m=25\cdot10^{2m},\qquad m\geq1.
+\]
+
+Each member is written as the square of the string consisting of $5$ followed by $m$ zeros, plus $m$ zero summands. For example,
+
+\[
+2500=50^2+0,\qquad 250000=500^2+0+0.
+\]
+
+The base uses $m$ zeros, the summands use the remaining $m$, and digit $2$ serves as the exponent. Thus exactly the digits of $n_m$ are used. This family requires concatenation and additional operations; it does not establish infinitude for pure-tower solutions.
+
+\section{Analysis and Discussion}
+
+\subsection{Verification, Reproducibility, and Scope of the Data}
+
+\subsubsection{Checks Performed}
+
+The historical verification procedures included:
+
+\begin{itemize}
+\item Comparing small fully evaluated towers with capped evaluation, divisibility, and modular exponentiation, including noncoprime bases and the cases $0$ and $1$.
+\item Directly enumerating the 10,000 integers with at most four digits for small indices and both conventions for $0^0$ in the external-index model.
+\item Comparing all permutations of candidates with at most five digits for $k=1,\ldots,12$ against the multiset solver.
+\item An independent factorization-and-partition reference search for every $n<10000$ in the block model with a variable index.
+\item Directly comparing all cuts of $n<1000$ with the prefixed-index block solver.
+\item Comparing certified prefixes with fully computed powers; the extended square-root exploration included 120 reproducible random cases and 999 valid small towers.
+\item Checking the representable-exponent generator up to 5,000 and the divisibility conditions for every small combination of $k,g,c$.
+\item Independently enumerating candidate powers for the initial-index model without imposing $t=gc^h/k$: 9,314 powers and 1,049 targets up to 1,000 digits, and 18,631 powers and 2,105 targets up to 2,000 digits, with no solutions.
+\end{itemize}
+
+\subsubsection{Audit Conducted for This Article}
+
+During preparation of the manuscript, the retained witnesses were audited anew without repeating the astronomical searches. The following were verified:
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}P{\dimexpr(\textwidth-2\tabcolsep)/2\relax}@{}}
+\toprule
+Retained set & Number of distinct records audited \\
+\midrule
+\endfirsthead
+\toprule
+Retained set & Number of distinct records audited \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Pairs with a permutation and a witnessing order & 69 \\
+Retained witnesses for blocks and an external index & 112, corresponding to 49 numbers \\
+Square-root partitions after deduplication & 136.216 \\
+Partitions with prefixed index $1$ & 352 \\
+Partitions with prefixed index $5$ & 27 \\
+Strict solutions with external index $k>2$ & 2 \\
+\end{longtable}
+\endgroup
+
+
+Concatenations, powers $b^t$, and exact equations or algebraic and divisibility certificates were checked. The audit completed successfully in 55.58 seconds. This duration is independent of the 600-second search run. Python 3.14.6 was used for this audit; historical timings are taken from their respective records and are not presented as normalized comparisons between algorithms or machines.
+
+The programs use Python's arbitrary-precision integers and standard library; \nolinkurl{mpmath} was not required. Removing a decimal integer-conversion limit does not remove memory constraints: the astronomical searches manipulate exponents and mantissas that are small relative to the virtual length of $n$.
+
+\subsubsection{Conditions for a Claim of Exhaustiveness}
+
+A region is considered fully covered only if: (i) the algebraic reduction includes all its possible solutions; (ii) enumeration finished within every stated bound; and (iii) every candidate was either rejected by a necessary condition or verified exactly, with no unresolved survivors.
+
+A number exceeding the explicit-construction limit is never rejected for that reason alone. No such unresolved case remained in the completed astronomical stages. A search stopped by its time limit reports only on the portion visited. Candidate counts refer to tuples or powers, depending on the algorithm, not to integers tested sequentially.
+
+\subsubsection{Reference Files}
+
+The original data include \nolinkurl{resultados_raices_1_a_10.json}, \nolinkurl{exploracion_extendida.json}, \nolinkurl{resultados_permutaciones.json}, \nolinkurl{resultados_bloques_*.json}, \nolinkurl{resumen_raiz2_bloques.json}, \nolinkurl{identidades_indice_incrustado.jsonl}, \nolinkurl{digitos_k_mayor2_10000.json}, \nolinkurl{primera_cifra_10p96.json}, and \nolinkurl{busqueda_600s_indice.json}. The new audit is recorded in \nolinkurl{AUDITORIA_ARTICULO.json}, and the catalogue of block witnesses is stored in \nolinkurl{catalogo_testigos_bloques.json}.
+
+The appendices below contain the complete catalogue of permutation pairs and all retained witnesses from the external-index block samples. The 136,216 square-root partitions and 379 prefixed-index identities are retained in the supplementary data files, avoiding the transcription of hundreds of thousands of rows in the article itself.
+
+The general block summaries did not retain every counted witness. This archival limitation prevents those samples from being presented as a complete catalogue of all detected identities; it does not alter the distinction among historical counters, complete regions, and partial explorations.
+
+\subsection{Interpretation of the Results}
+
+\subsubsection{The Decisive Constraint Is a Shared Primitive Base}
+
+Solutions depend first on the multiplicative compatibility $A^E=n^k$. A naive search through all integers wastes almost all its effort, since only a few powers are compatible with a single-digit bottom base. For blocks, this reduction remains valid, but the primitive base no longer belongs to a fixed set of five elements.
+
+\subsubsection{Zeros and Ones Change the Effective Size of a Tower}
+
+The growth of a tower is not determined by its height alone. A $1$ may eliminate the numerical influence of a defined upper tail, whereas a $0$ may produce exponents $0$ and subsequently values $1$. This explains both the classical identity and the constructions using $C\mid0\mid D$. At the same time, excluding $0^0$ rules out many decimal expansions. These effects justify processing the entire string rather than stopping the reasoning when a large power appears.
+
+\subsubsection{Why Colossal Indices Arise}
+
+With an unrestricted external index, an enormous tower need not approximate a small $n$: it must satisfy an exact divisibility condition. The relation $k=gE/t$ converts an exceptionally large exponent into the degree of an equally large root. Thus a ten-digit number may satisfy the equation with an index whose explicit representation is impractical, despite having a concise and rigorous symbolic description.
+
+The absence of solutions for many small indices does not imply their absence for unrestricted indices. The cases $n_1$ and $n_2$ demonstrate this distinction.
+
+\subsubsection{Embedding the Index Adds Another Self-Referential Constraint}
+
+When the first digit is the index, only eight degrees are possible and the number must begin with the compatible prefix $kac$. Moreover, one digit has been removed from the tower relative to the external-index model. The two sets of results therefore cannot be treated as though they concerned the same equation. Blocks provide enough flexibility to yield $9394^{82}$ with index $5$; the individual-digit variant remains without solutions throughout the enormous certified range.
+
+\subsubsection{Epistemic Limitations}
+
+The algebraic reductions and divisibility criteria were proved mathematically. The bounded classifications are computational results supported by those arguments, the programs, and verification procedures; they are not proofs of global nonexistence. Regions with bounded primitive base likewise do not cover all numbers of the stated length. Finally, timings are wall-clock measurements and depend on the machine, the pruning rules, and whether every witness is enumerated or only existence is decided.
+
+\section{Conclusions and Future Work}
+
+This study establishes a common framework for several forms of self-reference involving digits, powers, and roots. The reduction $A=b^g$, $n=b^t$, $gE=kt$ permits exact indices to be derived and divisibility to be verified without constructing enormous towers. Inverting exponentiation resolves partitions and permutations; integer intervals certify prefixes of virtually enormous powers; and exponent representability eliminates broad families before expensive computation begins.
+
+The principal results are the persistence of $262144$ as the sole nontrivial strict square-root case up to $10^{384}$ digits; classification into exactly two nontrivial cases for arbitrary external indices $k>2$ up to 10,000 digits; additional catalogues obtained through permutations and blocks; the square-root solution $26^{42}$; the case $9394^{82}$ with prefixed index $5$; and computational nonexistence of solutions with a one-digit initial index and a strict tower up to $10^{1536}$ digits.
+
+The following questions, among others, remain open:
+
+\begin{enumerate}
+\item Prove or disprove global uniqueness of $262144$ for the strict square-root problem.
+\item Determine whether further strict solutions exist with an external index $k>2$ and more than 10,000 digits.
+\item Prove or disprove global nonexistence of solutions with a one-digit initial index and no blocks.
+\item Characterize when a power $b^t$ has the required prefixes and a tail compatible with the tower constraint.
+\item Construct infinite families of pure-tower solutions without improperly transferring results about Friedman expressions.
+\item Extend the analysis to other numeral bases, distinguishing invariant algebraic properties from decimal coincidences.
+\item Produce complete certificate archives and retain every witness in future searches, together with independent verifiers and comparable time and memory measurements.
+\end{enumerate}
+
+The extent of the certified ranges demonstrates the value of algebraic reduction, while leaving the need for new ideas toward an unrestricted classification unchanged.
+
+\section*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+The author expresses his sincere gratitude to Matt Parker and the Numberphile team for presenting the $262144$ power-tower puzzle, whose discussion inspired this analytical generalization and computational search.
+
+The use of large language model tools (LLM / AI) as a computational assistant for code optimization, algebraic exploration, and manuscript organization is also acknowledged. The problem formulation, analytical mathematical verification, and overall direction of the research were carried out entirely by the author.
+
+\renewcommand{\refname}{References and Supplementary Material}
+\begin{thebibliography}{9}
+\addcontentsline{toc}{section}{References and Supplementary Material}
+
+\bibitem{numberphile-meme}
+Numberphile. \emph{A New Math Meme}. Video, YouTube.
+Presentador: Matt Parker, junto a Brady Haran.
+\url{https://www.youtube.com/watch?v=Uvy5Cs9FDLg}.
+
+\bibitem{friedman2000}
+Erich Friedman. \emph{Problem of the Month (August 2000)}.
+Definición de números de Friedman y ejemplos.
+\url{https://erich-friedman.github.io/mathmagic/0800.html}.
+
+\bibitem{registros-torres}
+Registros y programas de las búsquedas desarrolladas en esta conversación,
+conservados en el material suplementario. Sus nombres, convenciones y cotas
+se especifican en la sección 4.1.
+
+\bibitem{auditoria-torres}
+\nolinkurl{auditar_articulo.py} y \nolinkurl{AUDITORIA_ARTICULO.json}:
+auditoría de los testigos conservados y generación de los catálogos anexos.
+\end{thebibliography}
+
+
+\clearpage
+\appendix
+
+\section{Complete Catalogue of Permutations up to 18 Digits and 1 <= k <= 12}
+
+One row is given per pair (n,k), with a witnessing order; not all equivalent permutations are enumerated. T acts on individual digits.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}P{\dimexpr(\textwidth-4\tabcolsep)/3\relax}@{}}
+\toprule
+n & k & String s satisfying T(s)=n\textasciicircum{}k \\
+\midrule
+\endfirsthead
+\toprule
+n & k & String s satisfying T(s)=n\textasciicircum{}k \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+2 & 1 & \texttt{2} \\
+3 & 1 & \texttt{3} \\
+4 & 1 & \texttt{4} \\
+5 & 1 & \texttt{5} \\
+6 & 1 & \texttt{6} \\
+7 & 1 & \texttt{7} \\
+8 & 1 & \texttt{8} \\
+9 & 1 & \texttt{9} \\
+25 & 1 & \texttt{52} \\
+4096 & 1 & \texttt{4690} \\
+15625 & 1 & \texttt{56125} \\
+19683 & 1 & \texttt{39168} \\
+59049 & 1 & \texttt{95409} \\
+78125 & 1 & \texttt{57128} \\
+117649 & 1 & \texttt{761149} \\
+390625 & 1 & \texttt{523609} \\
+1953125 & 1 & \texttt{5321159} \\
+5764801 & 1 & \texttt{7810456} \\
+10077696 & 1 & \texttt{69106077} \\
+43046721 & 1 & \texttt{32410467} \\
+134217728 & 1 & \texttt{832112477} \\
+387420489 & 1 & \texttt{932404788} \\
+\seqsplit{2821109907456} & 1 & \texttt{\seqsplit{6241010257899}} \\
+\seqsplit{281474976710656} & 1 & \texttt{\seqsplit{824101456667779}} \\
+\seqsplit{1125899906842624} & 1 & \texttt{\seqsplit{4521012246688999}} \\
+\seqsplit{1853020188851841} & 1 & \texttt{\seqsplit{3251010114588888}} \\
+\seqsplit{150094635296999121} & 1 & \texttt{\seqsplit{362101012455699999}} \\
+\seqsplit{298023223876953125} & 1 & \texttt{\seqsplit{552102222333678899}} \\
+64 & 2 & \texttt{46} \\
+262144 & 2 & \texttt{262144} \\
+\seqsplit{152587890625} & 2 & \texttt{\seqsplit{525102567889}} \\
+\seqsplit{2821109907456} & 2 & \texttt{\seqsplit{6251010247899}} \\
+\seqsplit{3814697265625} & 2 & \texttt{\seqsplit{5621234566789}} \\
+\seqsplit{281474976710656} & 2 & \texttt{\seqsplit{825101446667779}} \\
+\seqsplit{1628413597910449} & 2 & \texttt{\seqsplit{7621011344458999}} \\
+\seqsplit{1853020188851841} & 2 & \texttt{\seqsplit{3821010114558888}} \\
+\seqsplit{150094635296999121} & 2 & \texttt{\seqsplit{962101012345569999}} \\
+40353607 & 3 & \texttt{73340506} \\
+134217728 & 3 & \texttt{234112778} \\
+244140625 & 3 & \texttt{562102444} \\
+2176782336 & 3 & \texttt{6621233778} \\
+\seqsplit{282429536481} & 3 & \texttt{\seqsplit{962122344588}} \\
+\seqsplit{18014398509481984} & 3 & \texttt{\seqsplit{43410101458888999}} \\
+262144 & 4 & \texttt{462124} \\
+43046721 & 4 & \texttt{32610447} \\
+\seqsplit{152587890625} & 4 & \texttt{\seqsplit{526102557889}} \\
+\seqsplit{2821109907456} & 4 & \texttt{\seqsplit{6821010245799}} \\
+\seqsplit{281474976710656} & 4 & \texttt{\seqsplit{826101445667779}} \\
+\seqsplit{298023223876953125} & 5 & \texttt{\seqsplit{553102222233678899}} \\
+15625 & 6 & \texttt{56215} \\
+134217728 & 6 & \texttt{432211778} \\
+78125 & 7 & \texttt{57218} \\
+390625 & 8 & \texttt{526309} \\
+43046721 & 8 & \texttt{32710446} \\
+\seqsplit{152587890625} & 8 & \texttt{\seqsplit{527102556889}} \\
+\seqsplit{2821109907456} & 8 & \texttt{\seqsplit{6271010245899}} \\
+\seqsplit{281474976710656} & 8 & \texttt{\seqsplit{827101445666779}} \\
+\seqsplit{1853020188851841} & 8 & \texttt{\seqsplit{3281010114558888}} \\
+625 & 9 & \texttt{562} \\
+1953125 & 9 & \texttt{5921135} \\
+40353607 & 9 & \texttt{73430506} \\
+134217728 & 9 & \texttt{832211477} \\
+387420489 & 9 & \texttt{934204788} \\
+\seqsplit{18014398509481984} & 9 & \texttt{\seqsplit{43510101448888999}} \\
+\seqsplit{59604644775390625} & 9 & \texttt{\seqsplit{56320404455667799}} \\
+68719476736 & 12 & \texttt{46316677789} \\
+\seqsplit{3814697265625} & 12 & \texttt{\seqsplit{5631224566789}} \\
+\seqsplit{1628413597910449} & 12 & \texttt{\seqsplit{7631011244458999}} \\
+\seqsplit{150094635296999121} & 12 & \texttt{\seqsplit{963101012245569999}} \\
+\end{longtable}
+\endgroup
+
+
+\section{All Retained Witnesses from the External-Index Block Explorations}
+
+This catalogue combines and deduplicates the examples stored in the historical JSON files. These files retained samples, not every identity counted during their runs. The catalogue therefore cannot reconstruct the complete lists from the original experiments. Slashes indicate cuts, never division. Each index is derived exactly from k=g*T(cola)/t.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{longtable}{@{}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}P{\dimexpr(\textwidth-6\tabcolsep)/4\relax}@{}}
+\toprule
+n & b\textasciicircum{}t & Blocks & k \\
+\midrule
+\endfirsthead
+\toprule
+n & b\textasciicircum{}t & Blocks & k \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\scriptsize Continued on the next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+256 & 2\textasciicircum{}8 & 2 / 56 & 7 \\
+4096 & 2\textasciicircum{}12 & 4 / 096 & 16 \\
+32768 & 2\textasciicircum{}15 & 32 / 768 & 256 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 2144 & 1 T(6,2144)/18 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 2 / 144 & 1 T(6,2,144)/18 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 21 / 44 & 1 T(6,21,44)/18 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 214 / 4 & 1 T(6,214,4)/18 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 2 / 1 / 44 & 2 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 2 / 14 / 4 & 1 T(6,2,14,4)/18 \\
+262144 & 2\textasciicircum{}18 & 2 / 6 / 21 / 4 / 4 & 1 T(6,21,4,4)/18 \\
+4194304 & 2\textasciicircum{}22 & 4 / 194304 & 17664 \\
+8388608 & 2\textasciicircum{}23 & 8 / 388608 & 50688 \\
+16777216 & 2\textasciicircum{}24 & 16 / 777216 & 129536 \\
+1475789056 & 14\textasciicircum{}8 & 14 / 75789056 & 9473632 \\
+3486784401 & 3\textasciicircum{}20 & 3 / 48678440 / 1 & 2433922 \\
+4096000000 & 40\textasciicircum{}6 & 40 / 96000000 & 16000000 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 294967296 & 18435456 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 967296 & 2 T(2,9,4,967296)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 49 / 67296 & 2 T(2,9,49,67296)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 6 / 7296 & 2 T(2,9,4,9,6,7296)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 67 / 296 & 2 T(2,9,4,9,67,296)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 6 / 7 / 296 & 2 T(2,9,4,9,6,7,296)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 6 / 72 / 96 & 2 T(2,9,4,9,6,72,96)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 6 / 7 / 2 / 96 & 2 T(2,9,4,9,6,7,2,96)/32 \\
+4294967296 & 2\textasciicircum{}32 & 4 / 2 / 9 / 4 / 9 / 6 / 7 / 29 / 6 & 2 T(2,9,4,9,6,7,29,6)/32 \\
+94143178827 & 3\textasciicircum{}23 & 9 / 414 / 3 / 1 / 78827 & 6170256 \\
+\seqsplit{31623446801367} & 31623\textasciicircum{}3 & 31623 / 446801367 & 148933789 \\
+\seqsplit{722204136308736} & 72\textasciicircum{}8 & 72 / \seqsplit{2204136308736} & \seqsplit{275517038592} \\
+\seqsplit{722204136308736} & 72\textasciicircum{}8 & 72 / 220 / 4 / 1 / 36308736 & 292820000 \\
+\seqsplit{722204136308736} & 72\textasciicircum{}8 & 72 / 2204136 / 3 / 0 / 8736 & 275517 \\
+\seqsplit{722204136308736} & 72\textasciicircum{}8 & 72 / 2 / 20 / 41363 / 0 / 8736 & 131072 \\
+\seqsplit{59604644775390625} & 5\textasciicircum{}24 & 5 / 960 / 464477539 / 0 / 625 & 40 \\
+\seqsplit{59604644775390625} & 5\textasciicircum{}24 & 5 / 960 / 4 / 64477539 / 0 / 625 & 35389440000 \\
+\seqsplit{79792266297612001} & 7\textasciicircum{}20 & 7 / \seqsplit{979226629761200} / 1 & \seqsplit{48961331488060} \\
+\seqsplit{139353667211683681} & 139\textasciicircum{}8 & 139 / \seqsplit{35366721168368} / 1 & \seqsplit{4420840146046} \\
+\seqsplit{139353667211683681} & 139\textasciicircum{}8 & 139 / 3536672 / 1 / 1683681 & 442084 \\
+\seqsplit{604661760000000000} & 60\textasciicircum{}10 & 60 / \seqsplit{4661760000000000} & \seqsplit{466176000000000} \\
+\seqsplit{2305843009213693952} & 2\textasciicircum{}61 & 2 / 305 / 8430 / 0 / 9213693952 & 5 \\
+\seqsplit{2305843009213693952} & 2\textasciicircum{}61 & 2 / 305 / 8 / 430 / 0 / 9213693952 & \seqsplit{1227633920320703125} \\
+\seqsplit{4641633499322843136} & 46416\textasciicircum{}4 & 46416 / \seqsplit{33499322843136} & \seqsplit{8374830710784} \\
+\seqsplit{4641633499322843136} & 46416\textasciicircum{}4 & 46416 / 3349932284 / 3 / 1 / 36 & \seqsplit{9398273804413382221004270576} \\
+\seqsplit{15855341456721390625} & 1585\textasciicircum{}6 & 1585 / 534 / 1 / \seqsplit{456721390625} & 89 \\
+\seqsplit{15855341456721390625} & 1585\textasciicircum{}6 & 1585 / 534 / 14 / 5672139 / 0 / 625 & \seqsplit{25552085266051469110863042804716691456} \\
+\seqsplit{251256791947735465984} & 2512\textasciicircum{}6 & 2512 / \seqsplit{56791947735465984} & \seqsplit{9465324622577664} \\
+\seqsplit{5183678737521468088576} & 518\textasciicircum{}8 & 518 / \seqsplit{3678737521468088576} & \seqsplit{459842190183511072} \\
+\seqsplit{5183678737521468088576} & 518\textasciicircum{}8 & 518 / 367873752 / 1 / 468088576 & 45984219 \\
+\seqsplit{5183678737521468088576} & 518\textasciicircum{}8 & 518 / 36 / 7 / 8737521468 / 0 / 88576 & 9795520512 \\
+\seqsplit{5183678737521468088576} & 518\textasciicircum{}8 & 518 / 3678 / 7 / 37521468 / 0 / 88576 & \seqsplit{1138130566711821157684464} \\
+\seqsplit{6140942214464815497216} & 6\textasciicircum{}28 & 6 / \seqsplit{140942214464815497216} & \seqsplit{5033650516600553472} \\
+\seqsplit{6140942214464815497216} & 6\textasciicircum{}28 & 6 / \seqsplit{1409422144648} / 1 / 5497216 & 50336505166 \\
+\seqsplit{31623893609046856514343} & 31623\textasciicircum{}5 & 31623 / \seqsplit{8936090468565} / 1 / 4343 & \seqsplit{1787218093713} \\
+\seqsplit{31623893609046856514343} & 31623\textasciicircum{}5 & 31623 / 89360 / 9 / 0 / 46856514343 & 17872 \\
+\seqsplit{582076609134674072265625} & 5\textasciicircum{}34 & 5 / 82076 / 6 / 0 / \seqsplit{9134674072265625} & 2414 \\
+\seqsplit{1978419655660313589123979} & 19\textasciicircum{}19 & 19 / \seqsplit{78419655660313589123979} & \seqsplit{4127350297911241532841} \\
+\seqsplit{1978419655660313589123979} & 19\textasciicircum{}19 & 19 / 7841965 / 566 / 0 / \seqsplit{313589123979} & 412735 \\
+\seqsplit{1978419655660313589123979} & 19\textasciicircum{}19 & 19 / 7841965 / 5 / 66 / 0 / \seqsplit{313589123979} & \seqsplit{1560884964600630049295448655459375} \\
+\seqsplit{4835703278458516698824704} & 2\textasciicircum{}82 & 4 / 835703 / \seqsplit{2784585166988247} / 0 / 4 & 20383 \\
+\seqsplit{4835703278458516698824704} & 2\textasciicircum{}82 & 4 / 835703 / 2 / \seqsplit{784585166988247} / 0 / 4 & 17034134249 \\
+\seqsplit{15849340381330380079492401} & 15849\textasciicircum{}6 & 15849 / 34038 / 1 / \seqsplit{330380079492401} & 5673 \\
+\seqsplit{15849340381330380079492401} & 15849\textasciicircum{}6 & 15849 / \seqsplit{3403813303800} / 794924 / 0 / 1 & \seqsplit{567302217300} \\
+\seqsplit{75084686279296875000000000} & 750\textasciicircum{}9 & 750 / 846 / \seqsplit{8627929687500000000} / 0 & 94 \\
+\seqsplit{75084686279296875000000000} & 750\textasciicircum{}9 & 750 / 84 / 6 / \seqsplit{8627929687500000000} / 0 & 39033114624 \\
+\seqsplit{75084686279296875000000000} & 750\textasciicircum{}9 & 750 / 846 / 8 / \seqsplit{627929687500000000} / 0 & \seqsplit{29155493364048985192704} \\
+\seqsplit{251196784355150379625705281} & 25119\textasciicircum{}6 & 25119 / 6 / 78435515 / 0 / \seqsplit{379625705281} & 1 \\
+\seqsplit{251196784355150379625705281} & 25119\textasciicircum{}6 & 25119 / 678 / 435515 / 0 / \seqsplit{379625705281} & 113 \\
+\seqsplit{251196784355150379625705281} & 25119\textasciicircum{}6 & 25119 / \seqsplit{67843551503796} / 257 / 0 / 5281 & \seqsplit{11307258583966} \\
+\seqsplit{1191817653772720942460132761} & 11\textasciicircum{}26 & 11 / 91817653772 / 72 / 0 / \seqsplit{942460132761} & 3531448222 \\
+\seqsplit{7244150201408990671659859968} & 72\textasciicircum{}15 & 72 / 4415020140 / 899 / 0 / \seqsplit{671659859968} & 294334676 \\
+\seqsplit{2535301200456458802993406410752} & 2\textasciicircum{}101 & 2 / 53530 / 1 / \seqsplit{200456458802993406410752} & 530 \\
+\seqsplit{2535301200456458802993406410752} & 2\textasciicircum{}101 & 2 / \seqsplit{5353012004564588029} / 934 / 0 / 6410752 & \seqsplit{53000118857075129} \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / \seqsplit{43368382029251248465784908928} / 1 & \seqsplit{677630969207050757277889202} \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / 4 / 3 / 368382 / 0 / \seqsplit{292512484657849089281} & 1 \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / 4 / 33 / 68382 / 0 / \seqsplit{292512484657849089281} & \seqsplit{1152921504606846976} \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / 4336 / 8 / 382 / 0 / \seqsplit{292512484657849089281} & \seqsplit{1952244528234153374755323904} \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / 43368 / 3 / 82 / 0 / \seqsplit{292512484657849089281} & \seqsplit{1274465867688} \\
+\seqsplit{3433683820292512484657849089281} & 3\textasciicircum{}64 & 3 / 4 / 3 / 3 / 68382 / 0 / \seqsplit{292512484657849089281} & \seqsplit{281474976710656} \\
+\seqsplit{6314267138338848586317495491431} & 631\textasciicircum{}11 & 631 / \seqsplit{4267138338848586317495491431} & \seqsplit{387921667168053301590499221} \\
+\seqsplit{6314267138338848586317495491431} & 631\textasciicircum{}11 & 631 / \seqsplit{42671383388485863} / 1 / 7495491431 & \seqsplit{3879216671680533} \\
+\seqsplit{6599743590836592050933837890625} & 65\textasciicircum{}17 & 65 / 99743590 / 836592 / 0 / \seqsplit{50933837890625} & 5867270 \\
+\seqsplit{92709463147897837085761925410587} & 3\textasciicircum{}67 & 9 / \seqsplit{2709463147897837085761} / 92541 / 0 / 587 & \seqsplit{80879496952174241366} \\
+\seqsplit{139708234283055276457744135264099} & 139\textasciicircum{}15 & 139 / 70823428305 / \seqsplit{5276457744135264} / 0 / 99 & 4721561887 \\
+\seqsplit{139708234283055276457744135264099} & 139\textasciicircum{}15 & 139 / \seqsplit{708234283055276457744135} / 264 / 0 / 99 & \seqsplit{47215618870351763849609} \\
+\seqsplit{324518553658426726783156020576256} & 2\textasciicircum{}108 & 32 / 45185536584 / 26726783156 / 0 / 20576256 & 2091922990 \\
+\seqsplit{324518553658426726783156020576256} & 2\textasciicircum{}108 & 32 / 4518 / 5 / \seqsplit{53658426726783156} / 0 / 20576256 & \seqsplit{87152004784437480} \\
+\seqsplit{324518553658426726783156020576256} & 2\textasciicircum{}108 & 32 / 45185536584 / 2 / 6726783156 / 0 / 20576256 & \seqsplit{94524662795555666160} \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / 27 / 973615 / 0 / \seqsplit{90139343954369066297} & 3 \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / 279 / 73615 / 0 / \seqsplit{90139343954369066297} & 31 \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / \seqsplit{27973615090139343} / 954369 / 0 / 66297 & \seqsplit{3108179454459927} \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / \seqsplit{279736150901393439} / 54369 / 0 / 66297 & \seqsplit{31081794544599271} \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / \seqsplit{27973615090139343954} / 369 / 0 / 66297 & \seqsplit{3108179454459927106} \\
+\seqsplit{421727973615090139343954369066297} & 4217\textasciicircum{}9 & 4217 / \seqsplit{2797361509013934395436} / 9 / 0 / 66297 & \seqsplit{310817945445992710604} \\
+\seqsplit{1389531539797122099925570687890625} & 13895\textasciicircum{}8 & 13895 / 3153979712 / 2 / 0 / \seqsplit{99925570687890625} & 394247464 \\
+\seqsplit{1389531539797122099925570687890625} & 13895\textasciicircum{}8 & 13895 / \seqsplit{3153979712209992} / 557 / 0 / 687890625 & \seqsplit{394247464026249} \\
+\seqsplit{6587349762134415952176334411534336} & 658\textasciicircum{}12 & 658 / \seqsplit{7349762134415952176334411534336} & \seqsplit{612480177867996014694534294528} \\
+\seqsplit{6587349762134415952176334411534336} & 658\textasciicircum{}12 & 658 / \seqsplit{7349762134415952} / 1 / \seqsplit{76334411534336} & \seqsplit{612480177867996} \\
+\seqsplit{6587349762134415952176334411534336} & 658\textasciicircum{}12 & 658 / 734976 / 2 / 1 / \seqsplit{34415952176334411534336} & 45015810048 \\
+\seqsplit{12597461251556672676010799893135859} & 1259\textasciicircum{}11 & 1259 / 7461251556 / 672676 / 0 / \seqsplit{10799893135859} & 678295596 \\
+\seqsplit{13696907849916094763278545543233536} & 136\textasciicircum{}16 & 136 / \seqsplit{96907849916094763278545543233536} & \seqsplit{6056740619755922704909096452096} \\
+\seqsplit{13696907849916094763278545543233536} & 136\textasciicircum{}16 & 136 / 96 / 9 / 0 / \seqsplit{7849916094763278545543233536} & 6 \\
+\seqsplit{13696907849916094763278545543233536} & 136\textasciicircum{}16 & 136 / 9690784 / 9916 / 0 / \seqsplit{94763278545543233536} & 605674 \\
+\seqsplit{13696907849916094763278545543233536} & 136\textasciicircum{}16 & 136 / 9690 / 7 / 849916 / 0 / \seqsplit{94763278545543233536} & \seqsplit{501356277004901345555625000} \\
+\seqsplit{13696907849916094763278545543233536} & 136\textasciicircum{}16 & 136 / 969078 / 4 / 9916 / 0 / \seqsplit{94763278545543233536} & \seqsplit{55120729249992484035441} \\
+\seqsplit{19307158978920526356962356233084001} & 19307\textasciicircum{}8 & 19307 / \seqsplit{15897892052635696235623308400} / 1 & \seqsplit{1987236506579462029452913550} \\
+\seqsplit{19307158978920526356962356233084001} & 19307\textasciicircum{}8 & 19307 / 158978920 / \seqsplit{526356962356233} / 0 / 84001 & 19872365 \\
+\seqsplit{19307158978920526356962356233084001} & 19307\textasciicircum{}8 & 19307 / \seqsplit{15897892052635696} / 2356233 / 0 / 84001 & \seqsplit{1987236506579462} \\
+\seqsplit{74994632695013731827926060475067499} & 7499\textasciicircum{}9 & 7499 / 463269501 / 3731827926 / 0 / 60475067499 & 51474389 \\
+\seqsplit{74994632695013731827926060475067499} & 7499\textasciicircum{}9 & 7499 / \seqsplit{4632695013731827926060} / 475 / 0 / 67499 & \seqsplit{514743890414647547340} \\
+\seqsplit{268272943322644772675824201642339681} & 26827\textasciicircum{}8 & 26827 / \seqsplit{294332264477267582420164233968} / 1 & \seqsplit{36791533059658447802520529246} \\
+\seqsplit{268272943322644772675824201642339681} & 26827\textasciicircum{}8 & 26827 / 294332264 / 47726758242 / 0 / 1642339681 & 36791533 \\
+\seqsplit{268272943322644772675824201642339681} & 26827\textasciicircum{}8 & 26827 / \seqsplit{2943322644772675824} / 2 / 0 / 1642339681 & \seqsplit{367915330596584478} \\
+\seqsplit{623673825204293256669089197883129856} & 6\textasciicircum{}46 & 6 / 23673825204 / 293256669 / 0 / \seqsplit{89197883129856} & 514648374 \\
+\seqsplit{623673825204293256669089197883129856} & 6\textasciicircum{}46 & 6 / 23673825204 / 2 / 93256669 / 0 / \seqsplit{89197883129856} & \seqsplit{12183695647598818296} \\
+\end{longtable}
+\endgroup
+
+
+\section{Algorithmic Outline and Reproduction}
+
+The strict search with an initial index and a bound of $D$ digits follows this outline:
+
+\begin{Codigo}
+for k = 2,...,9:
+    for each digit a = b^g between 2 and 9:
+        for c = 2,...,9:
+            discard the family if k/gcd(k,g) has a prime factor absent from c
+            determine the least h for which g*c^h/k is an integer
+            for each representable h within a sufficient bound:
+                t = g*c^h/k
+                require integer t, t > g, and t <= 4D
+                require certified prefix k,a,c in b^t
+                check compatibility of the tail with h
+                apply undefinedness certificates and modular filters
+                verify exactly or record as unresolved
+\end{Codigo}
+
+In the staged execution, only new exponents $t$ are processed; candidates admitted by the sufficient bound are resolved even when their length exceeds $D$. The stages therefore leave no gaps. The explicit-construction limit controls storage of $n$, not mathematical acceptance.
+
+The following commands reproduce the main configurations. They should be run on copies of the files, since outputs with identical names are overwritten. Time limits may interrupt the enumeration on slower machines; the completion status in the JSON must always be checked.
+
+\begin{Codigo}
+# Strict square roots: astronomical stages with a 300-second budget.
+python explorar_torres.py --segundos 300 --salida exploracion_extendida.json
+
+# Strict digits and an arbitrary external index k>2.
+python buscar_digitos_indices_mayores.py --max-digitos 10000 --segundos 60 --salida digitos_k_mayor2_10000
+
+# Permutations up to 18 digits, k=1,...,12.
+python variantes_flexibles.py
+
+# Blocks with a variable external index.
+python buscar_bloques.py --max-base 100000 --max-digitos 36 --max-bloques 5 --segundos 60 --salida resultados_bloques_final.json
+
+# Square roots only, with blocks.
+python buscar_raiz2_bloques.py --max-base 1000000 --max-digitos 120 --max-bloques 5 --segundos 90 --salida raiz2_bloques_120_5
+
+# Prefixed index and blocks.
+python buscar_indice_incrustado.py --max-base 10000 --max-digitos 330 --max-bloques 5 --segundos 90 --salida indice_incrustado_330_5
+
+# One-digit initial index and a strict tower: 600 seconds.
+python -u buscar_600s_indice.py --segundos 600
+
+# Audit of the retained historical witnesses.
+python auditar_articulo.py
+\end{Codigo}
+
+The final command regenerates the separate catalogues, not the article's explanatory text. Constructing the symbolic index introduces no additional operations into any original tower.
+
+
+\end{document}
